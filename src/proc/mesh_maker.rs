@@ -3,7 +3,7 @@ use bevy::{
     render::mesh::{Indices, PrimitiveTopology},
 };
 
-use super::{Orientation, Tile, TILE_BOUNDS, TILE_VERTS};
+use super::tile::*;
 
 #[derive(Default)]
 /// Contains the vertices, uvs and triangles used for building meshes.
