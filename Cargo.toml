@@ -1,0 +1,13 @@
+[package]
+name = "bevy-golf"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+#bevy = "0.7" # Use this for release.
+bevy = { version = "0.7.0", features = ["dynamic"] } # Used for development.
+
+# Physics!!
+bevy_rapier2d = "*"
