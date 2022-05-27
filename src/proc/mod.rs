@@ -1,11 +1,7 @@
-use bevy::{
-    ecs::system::QuerySingleError, math::const_ivec3, math::const_vec2, math::const_vec3,
-    prelude::*, render::mesh::PrimitiveTopology,
-};
+use bevy::{math::const_vec3, prelude::*};
 
 mod mesh_maker;
-
-use self::mesh_maker::{MeshMaker, Vertex};
+use self::mesh_maker::MeshMaker;
 
 const TILE_BOUNDS: Vec3 = const_vec3!([1.0, 0.5, 1.0]);
 const TILE_VERTS: &'static [Vec3] = &[
@@ -17,16 +13,6 @@ const TILE_VERTS: &'static [Vec3] = &[
     const_vec3!([0.5, 0.0, 0.5]),    // 5
     const_vec3!([-0.5, 0.0, 0.5]),   // 6
     const_vec3!([-0.5, 0.0, -0.5]),  // 7
-];
-const FLOOR_UV: &'static [Vec2] = &[
-    const_vec2!([1.0, 0.0]), // 0
-    const_vec2!([1.0, 1.0]), // 1
-    const_vec2!([0.0, 1.0]), // 2
-    const_vec2!([0.0, 0.0]), // 3
-    const_vec2!([1.0, 0.0]), // 4
-    const_vec2!([1.0, 1.0]), // 5
-    const_vec2!([0.0, 1.0]), // 6
-    const_vec2!([0.0, 0.0]), // 7
 ];
 
 #[derive(Copy, Clone)]
