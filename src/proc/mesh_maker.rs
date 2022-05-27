@@ -82,18 +82,14 @@ fn orient_indices(indices: &Vec<[u8; 3]>, orientation: &Orientation) -> Vec<[u8;
     // need to repeat the top and bottom indices separately
 
     let mut new_indices = indices.clone();
+    let rotations = *orientation as u8;
 
-    // Iterate for the amount of rotation operations required.
-    for _ in 0..(*orientation as u8) {
-        // Get every index and increment wrap each index keeping the upper and lower indices separated.
-        for index in new_indices.iter_mut().flatten() {
-            if *index == 3 {
-                *index = 0;
-            } else if *index == 7 {
-                *index = 4;
-            } else {
-                *index += 1;
-            }
+    // Iterate over each index, add our rotations with wrapping while also keeping upper and lower indices separated.
+    for index in new_indices.iter_mut().flatten() {
+        if *index >= 4 {
+            *index = 4 + (rotations + *index) % 4
+        } else {
+            *index = (rotations + *index) % 4
         }
     }
     new_indices
