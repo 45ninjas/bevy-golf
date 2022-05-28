@@ -33,7 +33,7 @@ fn setup_scene (mut commands: Commands) {
             shadows_enabled: false,
             ..Default::default()
         },
-        transform: Transform::from_xyz(2.0, 4.0, -3.0).looking_at(Vec3::ZERO, Vec3::Y),
+        transform: Transform::from_xyz(0.2, 0.1, 1.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..Default::default()
     });
 
@@ -41,6 +41,6 @@ fn setup_scene (mut commands: Commands) {
     // TODO: move creation of camera into camera module.
     let mut camera = OrthographicCameraBundle::new_3d();
     camera.orthographic_projection.scale = 3.0;
-    camera.transform = Transform::from_xyz(-5.0, 5.0, -5.0).looking_at(Vec3::ZERO, Vec3::Y);
+    camera.transform = Transform::from_xyz(-10.0, 10.0, -10.0).looking_at(Vec3::ZERO, Vec3::Y);
     commands.spawn_bundle(camera);
 }

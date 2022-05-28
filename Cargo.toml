@@ -11,3 +11,8 @@ bevy = { version = "0.7.0", features = ["dynamic"] } # Used for development.
 
 # Physics!!
 bevy_rapier2d = "*"
+ron = "0.7"
+serde = { version = "1", features = ["derive"] }
+anyhow = "*"
+
+bevy_prototype_debug_lines = { version = "0.6", features = ["3d"] }

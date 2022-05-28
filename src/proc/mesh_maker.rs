@@ -5,48 +5,46 @@ use bevy::{
 
 use super::tile::*;
 
-#[derive(Default)]
 /// Contains the vertices, uvs and triangles used for building meshes.
+#[derive(Default)]
 pub struct MeshMaker {
-    pub verts: Vec<Vertex>,
-    pub triangles: Vec<u32>,
+    verts: Vec<Vertex>,
+    triangles: Vec<u32>,
 }
 
 impl MeshMaker {
-    /// Inserts a tile into the mesh maker apply rotations and removing duplicated verts.
-    pub fn insert_tile(&mut self, tile: &Tile) {
-        // Rotate our triangles then iterate over each triangle.
-        for tri in orient_indices(&tile.tris, &tile.rotation).iter() {
-            // Calculate the surface normal for this triangle.
-            let a = TILE_VERTS[tri[0] as usize] * TILE_BOUNDS;
-            let b = TILE_VERTS[tri[1] as usize] * TILE_BOUNDS;
-            let c = TILE_VERTS[tri[2] as usize] * TILE_BOUNDS;
-            let normal = (b - a).cross(c - a).normalize();
+    /// Clears the mesh maker.
+    pub fn clear(&mut self) {
+        self.verts.clear();
+        self.triangles.clear();
+    }
 
-            for index in tri {
-                let vertex = Vertex {
-                    normal: normal,
-                    position: (tile.position.as_vec3() + TILE_VERTS[*index as usize]) * TILE_BOUNDS,
-                };
-                // If this is a new vert, add it.
-                if !self.verts.contains(&vertex) {
-                    self.verts.push(vertex);
-                }
+    /// Inserts a triangle.
+    pub fn insert_tri(&mut self, positions: [Vec3; 3]) {
+        let normal = (positions[1] - positions[0])
+            .cross(positions[2] - positions[0])
+            .normalize();
 
-                // Get the index of our vert from verts and push to triangles.
-                let index = self.verts.iter().position(|&x| x == vertex).unwrap();
-                let index = u32::try_from(index).unwrap();
-
-                self.triangles.push(index);
-            }
+        for position in positions {
+            let vertex = Vertex {
+                normal: normal,
+                position: position,
+            };
+            let index = self.insert(vertex);
+            self.triangles.push(index);
         }
     }
 
-    /// Create a new mesh from this mesh maker.
-    pub fn as_mesh(&self) -> Mesh {
-        let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
-        self.update_mesh(&mut mesh);
-        mesh
+    /// Inserts a vertex and returns it's index.
+    pub fn insert(&mut self, vertex: Vertex) -> u32 {
+        let index = self.verts.iter().position(|&x| x == vertex);
+        match index {
+            Some(index) => index as u32,
+            None => {
+                self.verts.push(vertex);
+                self.verts.len() as u32 - 1
+            }
+        }
     }
 
     /// Update an existing mesh.
@@ -59,6 +57,7 @@ impl MeshMaker {
         for v in self.verts.iter() {
             vertices.push([v.position.x, v.position.y, v.position.z]);
             normals.push([v.normal.x, v.normal.y, v.normal.z]);
+            // normals.push([0.0, 0.0, 1.0]);
             uvs.push([v.position.x, v.position.z]);
         }
 
@@ -68,31 +67,10 @@ impl MeshMaker {
         mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, vertices);
         mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
         mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
-
         // Set our triangles.
         let indices = Indices::U32(self.triangles.clone());
         mesh.set_indices(Some(indices));
     }
-}
-
-/// Rotate triangles
-fn orient_indices(indices: &Vec<[u8; 3]>, orientation: &Orientation) -> Vec<[u8; 3]> {
-    // To rotate triangles we can increment each index on all triangles.
-    // To prevent bottom indices becoming top indices and vice versa we
-    // need to repeat the top and bottom indices separately
-
-    let mut new_indices = indices.clone();
-    let rotations = *orientation as u8;
-
-    // Iterate over each index, add our rotations with wrapping while also keeping upper and lower indices separated.
-    for index in new_indices.iter_mut().flatten() {
-        if *index >= 4 {
-            *index = 4 + (rotations + *index) % 4
-        } else {
-            *index = (rotations + *index) % 4
-        }
-    }
-    new_indices
 }
 
 #[derive(Clone, Copy)]
