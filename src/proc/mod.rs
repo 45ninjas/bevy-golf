@@ -1,4 +1,6 @@
 use bevy::{asset::AssetLoader, prelude::*};
+use bevy_rapier3d::prelude::*;
+
 use tile::*;
 
 mod mesh_maker;
@@ -85,6 +87,7 @@ fn add_ground(
             ..default()
         })
         .insert(Ground)
+        .insert(Collider::trimesh(vec![Vec3::X, Vec3::ZERO, Vec3::Z, Vec3::X + Vec3::Z], vec![[0, 1, 2], [0, 3, 2]]))
         .insert(tile_def_handle);
 }
 
@@ -95,19 +98,19 @@ struct UpdateGroundEvent;
 fn generate_ground(
     mut ev_update_ground: EventReader<UpdateGroundEvent>,
     mut meshes: ResMut<Assets<Mesh>>,
+    mut ground_query: Query<(&Handle<Mesh>, &Handle<TileDefinitions>, &mut Collider), With<Ground>>,
     tile_query: Query<&Tile>,
-    ground_query: Query<(&Handle<Mesh>, &Handle<TileDefinitions>), With<Ground>>,
     mut mesh_maker: ResMut<MeshMaker>,
     defs_asset: ResMut<Assets<TileDefinitions>>,
 ) {
-    let (mesh_handle, defs_handle) = ground_query
-        .get_single()
+    let (mesh_handle, defs_handle, mut collider) = ground_query
+        .get_single_mut()
         .expect("A singular Ground doesn't exist.");
 
     let mesh = meshes
         .get_mut(mesh_handle)
         .expect("Ground has no Mesh to update.");
-    
+
     let defs = if let Some(defs) = defs_asset.get(defs_handle) {
         defs
     } else {
@@ -135,5 +138,9 @@ fn generate_ground(
             }
         }
         mesh_maker.update_mesh(mesh);
+        let mut trimesh = mesh_maker.trimesh();
+        let mut tm = collider.as_trimesh().expect("Not a trimesh!");
+        tm.raw = &trimesh;
+        collider
     }
 }

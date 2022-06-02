@@ -1,15 +1,14 @@
 use bevy::{
     prelude::*,
-    render::mesh::{Indices, PrimitiveTopology},
+    render::mesh::Indices,
 };
-
-use super::tile::*;
+use bevy_rapier3d::{prelude::*, rapier::prelude::TriMesh, na::Point3};
 
 /// Contains the vertices, uvs and triangles used for building meshes.
 #[derive(Default)]
 pub struct MeshMaker {
     verts: Vec<Vertex>,
-    triangles: Vec<u32>,
+    triangles: Vec<[u32;3]>,
 }
 
 impl MeshMaker {
@@ -25,14 +24,17 @@ impl MeshMaker {
             .cross(positions[2] - positions[0])
             .normalize();
 
-        for position in positions {
+        let mut tri: [u32; 3] = [0; 3];
+
+        for i in 0..3 {
             let vertex = Vertex {
                 normal: normal,
-                position: position,
+                position: positions[i]
             };
-            let index = self.insert(vertex);
-            self.triangles.push(index);
+
+            tri[i] = self.insert(vertex);
         }
+        self.triangles.push(tri);
     }
 
     /// Inserts a vertex and returns it's index.
@@ -61,6 +63,14 @@ impl MeshMaker {
             uvs.push([v.position.x, v.position.z]);
         }
 
+        let mut triangles = Vec::new();
+
+        for tri in self.triangles.iter() {
+            triangles.push(tri[0]);
+            triangles.push(tri[1]);
+            triangles.push(tri[2]);
+        }
+
         // Log to confirm that our duplicate remove process works.
         // println!("Total Vertices: {:?}", vertices.len());
 
@@ -68,8 +78,17 @@ impl MeshMaker {
         mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
         mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
         // Set our triangles.
-        let indices = Indices::U32(self.triangles.clone());
+        let indices = Indices::U32(triangles);
         mesh.set_indices(Some(indices));
+    }
+
+    pub fn trimesh(&self) -> TriMesh{
+        let mut vertices = Vec::new();
+        for v in self.verts.iter() {
+            vertices.push(Point3::new(v.position.x, v.position.y, v.position.z));
+        }
+        let tris = self.triangles.clone();
+        TriMesh::new(vertices, tris)
     }
 }
 

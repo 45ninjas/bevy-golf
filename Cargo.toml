@@ -10,7 +10,7 @@ edition = "2021"
 bevy = { version = "0.7.0", features = ["dynamic"] } # Used for development.
 
 # Physics!!
-bevy_rapier2d = "*"
+bevy_rapier3d = "*"
 ron = "0.7"
 serde = { version = "1", features = ["derive"] }
 anyhow = "*"
