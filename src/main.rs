@@ -33,7 +33,7 @@ fn setup_scene (mut commands: Commands) {
             shadows_enabled: false,
             ..Default::default()
         },
-        transform: Transform::from_xyz(0.2, 0.1, 1.0).looking_at(Vec3::ZERO, Vec3::Y),
+        transform: Transform::from_xyz(0.2, 1.0, 0.2).looking_at(Vec3::ZERO, Vec3::Y),
         ..Default::default()
     });
 
