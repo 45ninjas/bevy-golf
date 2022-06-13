@@ -34,6 +34,7 @@ fn add_ball(
             ..default()
         })
         .insert(RigidBody::Dynamic)
+        .insert(Ccd::enabled())
         .insert(Collider::ball(BALL_RADIUS))
         .insert(Ball)
         .insert(camera::CameraTarget);
