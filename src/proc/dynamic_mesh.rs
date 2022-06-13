@@ -1,10 +1,11 @@
 use bevy::{prelude::*, render::mesh::Indices};
-use bevy_rapier3d::prelude::*;
+use bevy_rapier3d::{prelude::*, rapier::prelude::ColliderBuilder};
 
 pub struct DynamicMeshPlugin;
 impl Plugin for DynamicMeshPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(dynamic_mesh_changed);
+        app.add_system(mesh_on_changed);
+        app.add_system(collider_on_changed);
     }
 }
 
@@ -16,7 +17,6 @@ pub struct DynamicMesh {
 }
 
 impl DynamicMesh {
-
     pub fn new() -> DynamicMesh {
         DynamicMesh {
             ..Default::default()
@@ -26,6 +26,10 @@ impl DynamicMesh {
     pub fn clear(&mut self) {
         self.verts.clear();
         self.triangles.clear();
+    }
+
+    pub fn tri_count(&self) -> usize {
+        self.triangles.len()
     }
 
     /// Inserts a triangle.
@@ -94,18 +98,33 @@ impl DynamicMesh {
         for v in self.verts.iter() {
             vertices.push(v.position);
         }
-        Collider::trimesh(vertices, self.triangles.clone())
+        let triangles = self.triangles.clone();
+        Collider::trimesh(vertices, triangles)
     }
 }
 
 // Updates a Mesh when the DynamicMesh has been changed.
-fn dynamic_mesh_changed(
+fn mesh_on_changed(
     mut assets: ResMut<Assets<Mesh>>,
     query: Query<(&Handle<Mesh>, &DynamicMesh), Changed<DynamicMesh>>,
 ) {
     for (handle, dynamic) in query.iter() {
         if let Some(mesh) = assets.get_mut(handle) {
             dynamic.update_mesh(mesh);
+        }
+    }
+}
+
+fn collider_on_changed(
+    mut commands: Commands,
+    query: Query<(Entity, &DynamicMesh, &Collider), Changed<DynamicMesh>>,
+) {
+    for (ent, dynamic, _) in query.iter() {
+        if dynamic.tri_count() > 0 {
+            commands
+                .entity(ent)
+                .remove::<Collider>()
+                .insert(dynamic.collider());
         }
     }
 }

@@ -90,6 +90,7 @@ fn add_ground(
             }),
             ..default()
         })
+        .insert(Collider::cuboid(0.5, 0.5, 0.5))
         .insert(DynamicMesh::new())
         .insert(Ground)
         .insert(tile_defs.clone());
