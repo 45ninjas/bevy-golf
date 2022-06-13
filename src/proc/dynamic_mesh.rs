@@ -1,17 +1,27 @@
-use bevy::{
-    prelude::*,
-    render::mesh::Indices,
-};
-use bevy_rapier3d::{prelude::*, rapier::prelude::TriMesh, na::Point3};
+use bevy::{prelude::*, render::mesh::Indices};
+use bevy_rapier3d::prelude::*;
 
-/// Contains the vertices, uvs and triangles used for building meshes.
-#[derive(Default)]
-pub struct MeshMaker {
-    verts: Vec<Vertex>,
-    triangles: Vec<[u32;3]>,
+pub struct DynamicMeshPlugin;
+impl Plugin for DynamicMeshPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_system(dynamic_mesh_changed);
+    }
 }
 
-impl MeshMaker {
+/// Contains the vertices, uvs and triangles used for building meshes.
+#[derive(Component, Default)]
+pub struct DynamicMesh {
+    verts: Vec<Vertex>,
+    triangles: Vec<[u32; 3]>,
+}
+
+impl DynamicMesh {
+
+    pub fn new() -> DynamicMesh {
+        DynamicMesh {
+            ..Default::default()
+        }
+    }
     /// Clears the mesh maker.
     pub fn clear(&mut self) {
         self.verts.clear();
@@ -29,7 +39,7 @@ impl MeshMaker {
         for i in 0..3 {
             let vertex = Vertex {
                 normal: normal,
-                position: positions[i]
+                position: positions[i],
             };
 
             tri[i] = self.insert(vertex);
@@ -71,9 +81,6 @@ impl MeshMaker {
             triangles.push(tri[2]);
         }
 
-        // Log to confirm that our duplicate remove process works.
-        // println!("Total Vertices: {:?}", vertices.len());
-
         mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, vertices);
         mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
         mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
@@ -82,13 +89,24 @@ impl MeshMaker {
         mesh.set_indices(Some(indices));
     }
 
-    pub fn trimesh(&self) -> TriMesh{
+    pub fn collider(&self) -> Collider {
         let mut vertices = Vec::new();
         for v in self.verts.iter() {
-            vertices.push(Point3::new(v.position.x, v.position.y, v.position.z));
+            vertices.push(v.position);
         }
-        let tris = self.triangles.clone();
-        TriMesh::new(vertices, tris)
+        Collider::trimesh(vertices, self.triangles.clone())
+    }
+}
+
+// Updates a Mesh when the DynamicMesh has been changed.
+fn dynamic_mesh_changed(
+    mut assets: ResMut<Assets<Mesh>>,
+    query: Query<(&Handle<Mesh>, &DynamicMesh), Changed<DynamicMesh>>,
+) {
+    for (handle, dynamic) in query.iter() {
+        if let Some(mesh) = assets.get_mut(handle) {
+            dynamic.update_mesh(mesh);
+        }
     }
 }
 
