@@ -1,4 +1,4 @@
-use bevy::{asset::AssetLoader, prelude::*};
+use bevy::{asset::AssetLoader, ecs::query, prelude::*};
 use bevy_rapier3d::prelude::*;
 
 use tile::*;
@@ -31,68 +31,58 @@ pub struct Wall;
 
 fn add_tiles(mut commands: Commands, mut ev_update_ground: EventWriter<UpdateGroundEvent>) {
     commands.spawn().insert(Tile {
-        position: IVec3::ZERO,
-        rotation: Orientation::South,
+        position: IVec3::new(2, 1, 0),
+        rotation: Orientation::North,
         tile_type: 1,
     });
-    // commands.spawn().insert(Tile {
-    //     position: IVec3::Z,
-    //     rotation: Orientation::North,
-    //     tile_type: 1,
-    // });
-    // commands.spawn().insert(Tile {
-    //     position: IVec3::new(2, 1, 0),
-    //     rotation: Orientation::North,
-    //     tile_type: 1,
-    // });
-    // commands.spawn().insert(Tile {
-    //     position: IVec3::new(1, 1, 0),
-    //     rotation: Orientation::North,
-    //     tile_type: 3,
-    // });
-    // commands.spawn().insert(Tile {
-    //     position: IVec3::new(0, 0, 0),
-    //     rotation: Orientation::North,
-    //     tile_type: 1,
-    // });
-    // commands.spawn().insert(Tile {
-    //     position: IVec3::new(0, 0, -1),
-    //     rotation: Orientation::North,
-    //     tile_type: 6,
-    // });
-    // commands.spawn().insert(Tile {
-    //     position: IVec3::new(1, 0, -1),
-    //     rotation: Orientation::North,
-    //     tile_type: 1,
-    // });
-    // commands.spawn().insert(Tile {
-    //     position: IVec3::new(2, 0, -1),
-    //     rotation: Orientation::North,
-    //     tile_type: 1,
-    // });
-    // commands.spawn().insert(Tile {
-    //     position: IVec3::new(-1, 0, 0),
-    //     rotation: Orientation::West,
-    //     tile_type: 4,
-    // });
+    commands.spawn().insert(Tile {
+        position: IVec3::new(1, 1, 0),
+        rotation: Orientation::North,
+        tile_type: 3,
+    });
+    commands.spawn().insert(Tile {
+        position: IVec3::new(0, 0, 0),
+        rotation: Orientation::North,
+        tile_type: 1,
+    });
+    commands.spawn().insert(Tile {
+        position: IVec3::new(0, 0, -1),
+        rotation: Orientation::North,
+        tile_type: 6,
+    });
+    commands.spawn().insert(Tile {
+        position: IVec3::new(1, 0, -1),
+        rotation: Orientation::North,
+        tile_type: 1,
+    });
+    commands.spawn().insert(Tile {
+        position: IVec3::new(2, 0, -1),
+        rotation: Orientation::North,
+        tile_type: 1,
+    });
+    commands.spawn().insert(Tile {
+        position: IVec3::new(-1, 0, 0),
+        rotation: Orientation::West,
+        tile_type: 4,
+    });
 
-    // commands.spawn().insert(Tile {
-    //     position: IVec3::new(-1, 0, -1),
-    //     rotation: Orientation::East,
-    //     tile_type: 3,
-    // });
+    commands.spawn().insert(Tile {
+        position: IVec3::new(-1, 0, -1),
+        rotation: Orientation::East,
+        tile_type: 3,
+    });
 
-    // commands.spawn().insert(Tile {
-    //     position: IVec3::new(-1, -1, -2),
-    //     rotation: Orientation::East,
-    //     tile_type: 4,
-    // });
+    commands.spawn().insert(Tile {
+        position: IVec3::new(-1, -1, -2),
+        rotation: Orientation::East,
+        tile_type: 4,
+    });
 
-    // commands.spawn().insert(Tile {
-    //     position: IVec3::new(-2, -1, -2),
-    //     rotation: Orientation::North,
-    //     tile_type: 2,
-    // });
+    commands.spawn().insert(Tile {
+        position: IVec3::new(-2, -1, -2),
+        rotation: Orientation::North,
+        tile_type: 2,
+    });
 
     ev_update_ground.send_default();
 }
@@ -111,8 +101,8 @@ fn add_ground(
                 ..Default::default()
             })),
             material: materials.add(StandardMaterial {
-                // base_color: Color::hex("1A7525").unwrap(),
-                base_color_texture: Some(asset_server.load("textures/checker-grass.png")),
+                base_color: Color::hex("1A7525").unwrap(),
+                // base_color_texture: Some(asset_server.load("textures/checker-grass.png")),
                 ..default()
             }),
             ..default()
@@ -136,8 +126,8 @@ fn add_walls(
                 ..Default::default()
             })),
             material: materials.add(StandardMaterial {
-                // base_color: Color::hex("433022").unwrap(),
-                base_color_texture: Some(asset_server.load("textures/checker-wood.png")),
+                base_color: Color::hex("E8B792").unwrap(),
+                // base_color_texture: Some(asset_server.load("textures/checker-wood.png")),
                 ..default()
             }),
             ..default()
@@ -213,14 +203,18 @@ fn update_walls(
                     for edge_index in def.edges.iter() {
                         // Rotate each edge, while we're iterating add the position;
                         let new_edge = Edge(
-                            TILE_VERTS[rotate_index(edge_index.0, &tile.rotation) as usize],
-                            TILE_VERTS[rotate_index(edge_index.1, &tile.rotation) as usize],
+                            (TILE_VERTS[rotate_index(edge_index[0], &tile.rotation) as usize]
+                                + tile.position.as_vec3())
+                                * TILE_BOUNDS,
+                            (TILE_VERTS[rotate_index(edge_index[1], &tile.rotation) as usize]
+                                + tile.position.as_vec3())
+                                * TILE_BOUNDS,
                         );
 
                         match edges.iter().position(|x| new_edge.eq(x)) {
                             // If this edge already exists, increment our edge counter for this edge.
                             Some(index) => {
-                                edges_count[index] += 1;
+                                edges_count[index] = edges_count[index] + 1;
                             }
                             // Else add a new edge counter entry and the new edge.
                             None => {
@@ -232,20 +226,50 @@ fn update_walls(
                     }
                 }
             }
+            println!("Edges: {:?}", edges);
+            println!("Edges count: {:?}", edges_count);
             let mut total_edges = 0;
             for i in 0..edges.len() {
                 let edge = &edges[i];
+                let a = edge.0;
+                let b = edge.1;
+                const WALL_SIZE: f32 = 0.075;
+
+                let up = Vec3::Y * WALL_SIZE;
+                let inside = (a - b).normalize().cross(Vec3::Y) * WALL_SIZE;
+
+                // If there's one edge (no duplicated edges) then place our edge.
                 if edges_count[i] == 1 {
                     total_edges += 1;
-                    dynamic_mesh.insert_tri([edge.1, edge.0, edge.0 - Vec3::Y * TILE_BOUNDS.y]);
-                    dynamic_mesh.insert_tri([
-                        edge.0 - Vec3::Y * TILE_BOUNDS.y,
-                        edge.1 - Vec3::Y * TILE_BOUNDS.y,
-                        edge.1,
-                    ]);
+                    // Outside wall
+                    dynamic_mesh.insert_tri([b + up, a + up, a - Vec3::Y]);
+                    dynamic_mesh.insert_tri([a - Vec3::Y, b - Vec3::Y, b + up]);
+
+                    // Top face
+                    dynamic_mesh.insert_tri([b + up + inside, a + up, b + up]);
+                    dynamic_mesh.insert_tri([b + up + inside, a + up + inside, a + up]);
+
+                    // Inside face
+                    dynamic_mesh.insert_tri([b + up + inside, b + inside, a + inside]);
+                    dynamic_mesh.insert_tri([b + up + inside, a + inside, a + up + inside]);
                 }
             }
             println!("{:?} Edges total", total_edges);
+        }
+    }
+}
+
+fn reload_tile_defs(
+    mut ev_update_ground: EventWriter<UpdateGroundEvent>,
+    mut ev_assets: EventReader<AssetEvent<TileDefinitions>>,
+) {
+    for ev in ev_assets.iter() {
+        match ev {
+            AssetEvent::Created { handle: _ } => {}
+            AssetEvent::Modified { handle } => {
+                ev_update_ground.send_default();
+            }
+            AssetEvent::Removed { handle: _ } => {}
         }
     }
 }

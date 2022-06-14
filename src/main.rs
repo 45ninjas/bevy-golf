@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, asset::AssetServerSettings};
 use bevy_rapier3d::prelude::*;
 
 mod proc;
@@ -7,6 +7,10 @@ mod camera;
 
 fn main() {
     App::new()
+        .insert_resource(AssetServerSettings {
+            watch_for_changes: true,
+            ..default()
+        })
         .add_plugins(DefaultPlugins)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_plugin(RapierDebugRenderPlugin::default())

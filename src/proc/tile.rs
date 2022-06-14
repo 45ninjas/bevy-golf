@@ -53,15 +53,12 @@ pub struct Tile {
 }
 
 #[derive(Debug)]
-pub struct Edge<T>(pub T, pub T);
-impl PartialEq for Edge<u8> {
+pub struct Edge(pub Vec3, pub Vec3);
+impl PartialEq for Edge {
     fn eq(&self, other: &Self) -> bool {
-        (self.0 == other.0 && self.1 == other.1) || (self.1 == other.1 && self.0 == other.0)
-    }
-}
-impl PartialEq for Edge<Vec3> {
-    fn eq(&self, other: &Self) -> bool {
-        (self.0 == other.0 && self.1 == other.1) || (self.1 == other.1 && self.0 == other.0)
+        const MAX_ABS_DIFF: f32 = 0.01;
+        (self.0.abs_diff_eq(other.0, MAX_ABS_DIFF) && self.1.abs_diff_eq(other.1, MAX_ABS_DIFF))
+            || (self.0.abs_diff_eq(other.1, MAX_ABS_DIFF) && self.1.abs_diff_eq(other.0, MAX_ABS_DIFF))
     }
 }
 
@@ -71,9 +68,7 @@ pub struct TileDefinition {
     pub id: u8,
     pub name: String,
     pub triangles: Vec<[u8; 3]>,
-
-    #[serde(skip)]
-    pub edges: Vec<Edge<u8>>,
+    pub edges: Vec<[u8; 2]>,
 }
 
 impl Default for TileDefinition {
@@ -83,22 +78,6 @@ impl Default for TileDefinition {
             name: String::from("Error: Unknown"),
             triangles: Default::default(),
             edges: Default::default(),
-        }
-    }
-}
-
-impl TileDefinition {
-    fn compute_edges(&mut self) {
-        // Add the indices of all the edges on the triangle.
-        self.edges.clear();
-        for tri in self.triangles.iter() {
-            for i in 0..2 {
-                let edge = Edge(tri[i], tri[(i + 1) % 3]);
-
-                if !self.edges.contains(&edge) {
-                    self.edges.push(edge);
-                }
-            }
         }
     }
 }
@@ -117,10 +96,7 @@ impl AssetLoader for TileDefinitionsLoader {
         load_context: &'a mut bevy::asset::LoadContext,
     ) -> BoxedFuture<'a, Result<(), anyhow::Error>> {
         Box::pin(async move {
-            let mut array = ron::de::from_bytes::<Vec<TileDefinition>>(bytes)?;
-            for def in array.iter_mut() {
-                def.compute_edges();
-            }
+            let array = ron::de::from_bytes::<Vec<TileDefinition>>(bytes)?;
             let asset = TileDefinitions(array);
             load_context.set_default_asset(LoadedAsset::new(asset));
             Ok(())
