@@ -20,6 +20,7 @@ impl Plugin for ProcPlugin {
         app.add_event::<UpdateGroundEvent>();
         app.add_system(update_ground);
         app.add_system(update_walls);
+        app.add_system(reload_tile_defs);
         app.add_startup_system(add_tiles);
     }
 }
@@ -226,8 +227,6 @@ fn update_walls(
                     }
                 }
             }
-            println!("Edges: {:?}", edges);
-            println!("Edges count: {:?}", edges_count);
             let mut total_edges = 0;
             for i in 0..edges.len() {
                 let edge = &edges[i];

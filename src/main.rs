@@ -18,7 +18,6 @@ fn main() {
         .add_plugin(ball::BallPlugin)
         .add_plugin(camera::CameraPlugin)
         .add_startup_system(setup_scene)
-        .add_startup_system(setup_physics)
         .run();
 }
 
@@ -42,10 +41,4 @@ fn setup_scene(mut commands: Commands) {
         transform: Transform::from_xyz(0.2, 1.0, 0.2).looking_at(Vec3::ZERO, Vec3::Y),
         ..Default::default()
     });
-}
-
-fn setup_physics(mut commands: Commands) {
-    // commands
-    //     .spawn_bundle(TransformBundle::from(Transform::from_xyz(0.0, -0.0, 0.0)))
-    //     .insert(Collider::cuboid(200.0, 0.1, 200.0));
 }
