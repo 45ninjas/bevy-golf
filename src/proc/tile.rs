@@ -1,5 +1,7 @@
 use serde::Deserialize;
 
+use std::hash::{Hash, Hasher};
+
 use bevy::{
     asset::{AssetLoader, LoadContext, LoadedAsset},
     math::const_vec3,
@@ -38,6 +40,10 @@ pub fn rotate_index(index: u8, orientation: &Orientation) -> u8 {
     }
 }
 
+pub fn index_to_lower(index: u8) -> u8 {
+    index % 4
+}
+
 #[derive(Debug, Deserialize, TypeUuid, Component)]
 #[uuid = "aa5fc0fb-722d-4d8f-b0cd-9526f1a0e75e"]
 pub struct Tile {
@@ -46,12 +52,28 @@ pub struct Tile {
     pub tile_type: u8,
 }
 
+#[derive(Debug)]
+pub struct Edge<T>(pub T, pub T);
+impl PartialEq for Edge<u8> {
+    fn eq(&self, other: &Self) -> bool {
+        (self.0 == other.0 && self.1 == other.1) || (self.1 == other.1 && self.0 == other.0)
+    }
+}
+impl PartialEq for Edge<Vec3> {
+    fn eq(&self, other: &Self) -> bool {
+        (self.0 == other.0 && self.1 == other.1) || (self.1 == other.1 && self.0 == other.0)
+    }
+}
+
 #[derive(Debug, Deserialize, TypeUuid)]
 #[uuid = "b43e6937-97e2-4fb9-9146-16f894bf814d"]
 pub struct TileDefinition {
     pub id: u8,
     pub name: String,
     pub triangles: Vec<[u8; 3]>,
+
+    #[serde(skip)]
+    pub edges: Vec<Edge<u8>>,
 }
 
 impl Default for TileDefinition {
@@ -60,6 +82,23 @@ impl Default for TileDefinition {
             id: 0,
             name: String::from("Error: Unknown"),
             triangles: Default::default(),
+            edges: Default::default(),
+        }
+    }
+}
+
+impl TileDefinition {
+    fn compute_edges(&mut self) {
+        // Add the indices of all the edges on the triangle.
+        self.edges.clear();
+        for tri in self.triangles.iter() {
+            for i in 0..2 {
+                let edge = Edge(tri[i], tri[(i + 1) % 3]);
+
+                if !self.edges.contains(&edge) {
+                    self.edges.push(edge);
+                }
+            }
         }
     }
 }
@@ -78,7 +117,10 @@ impl AssetLoader for TileDefinitionsLoader {
         load_context: &'a mut bevy::asset::LoadContext,
     ) -> BoxedFuture<'a, Result<(), anyhow::Error>> {
         Box::pin(async move {
-            let array = ron::de::from_bytes::<Vec<TileDefinition>>(bytes)?;
+            let mut array = ron::de::from_bytes::<Vec<TileDefinition>>(bytes)?;
+            for def in array.iter_mut() {
+                def.compute_edges();
+            }
             let asset = TileDefinitions(array);
             load_context.set_default_asset(LoadedAsset::new(asset));
             Ok(())

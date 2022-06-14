@@ -14,3 +14,6 @@ bevy_rapier3d = "*"
 ron = "0.7"
 serde = { version = "1", features = ["derive"] }
 anyhow = "*"
+
+[profile.dev.package.bevy_rapier3d]
+opt-level = 3

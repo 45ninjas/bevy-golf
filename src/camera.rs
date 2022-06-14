@@ -23,7 +23,7 @@ const CAMERA_OFFSET: Vec3 = const_vec3!([-10.0, 10.0, -10.0]);
 
 fn add_camera(mut commands: Commands) {
     let mut camera = OrthographicCameraBundle::new_3d();
-    camera.orthographic_projection.scale = 2.0;
+    camera.orthographic_projection.scale = 3.0;
     camera.transform = Transform::from_translation(CAMERA_OFFSET).looking_at(Vec3::ZERO, Vec3::Y);
 
     commands.spawn_bundle(camera);

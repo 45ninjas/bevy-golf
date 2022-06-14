@@ -16,8 +16,10 @@ impl Plugin for ProcPlugin {
         app.init_asset_loader::<TileDefinitionsLoader>();
         app.add_plugin(DynamicMeshPlugin);
         app.add_startup_system(add_ground);
+        app.add_startup_system(add_walls);
         app.add_event::<UpdateGroundEvent>();
         app.add_system(update_ground);
+        app.add_system(update_walls);
         app.add_startup_system(add_tiles);
     }
 }
@@ -29,43 +31,68 @@ pub struct Wall;
 
 fn add_tiles(mut commands: Commands, mut ev_update_ground: EventWriter<UpdateGroundEvent>) {
     commands.spawn().insert(Tile {
-        position: IVec3::new(2, 1, 0),
-        rotation: Orientation::North,
+        position: IVec3::ZERO,
+        rotation: Orientation::South,
         tile_type: 1,
     });
-    commands.spawn().insert(Tile {
-        position: IVec3::new(1, 1, 0),
-        rotation: Orientation::North,
-        tile_type: 3,
-    });
-    commands.spawn().insert(Tile {
-        position: IVec3::new(0, 0, 0),
-        rotation: Orientation::North,
-        tile_type: 1,
-    });
-    commands.spawn().insert(Tile {
-        position: IVec3::new(-1, 0, 0),
-        rotation: Orientation::West,
-        tile_type: 4,
-    });
+    // commands.spawn().insert(Tile {
+    //     position: IVec3::Z,
+    //     rotation: Orientation::North,
+    //     tile_type: 1,
+    // });
+    // commands.spawn().insert(Tile {
+    //     position: IVec3::new(2, 1, 0),
+    //     rotation: Orientation::North,
+    //     tile_type: 1,
+    // });
+    // commands.spawn().insert(Tile {
+    //     position: IVec3::new(1, 1, 0),
+    //     rotation: Orientation::North,
+    //     tile_type: 3,
+    // });
+    // commands.spawn().insert(Tile {
+    //     position: IVec3::new(0, 0, 0),
+    //     rotation: Orientation::North,
+    //     tile_type: 1,
+    // });
+    // commands.spawn().insert(Tile {
+    //     position: IVec3::new(0, 0, -1),
+    //     rotation: Orientation::North,
+    //     tile_type: 6,
+    // });
+    // commands.spawn().insert(Tile {
+    //     position: IVec3::new(1, 0, -1),
+    //     rotation: Orientation::North,
+    //     tile_type: 1,
+    // });
+    // commands.spawn().insert(Tile {
+    //     position: IVec3::new(2, 0, -1),
+    //     rotation: Orientation::North,
+    //     tile_type: 1,
+    // });
+    // commands.spawn().insert(Tile {
+    //     position: IVec3::new(-1, 0, 0),
+    //     rotation: Orientation::West,
+    //     tile_type: 4,
+    // });
 
-    commands.spawn().insert(Tile {
-        position: IVec3::new(-1, 0, -1),
-        rotation: Orientation::East,
-        tile_type: 3,
-    });
+    // commands.spawn().insert(Tile {
+    //     position: IVec3::new(-1, 0, -1),
+    //     rotation: Orientation::East,
+    //     tile_type: 3,
+    // });
 
-    commands.spawn().insert(Tile {
-        position: IVec3::new(-1, -1, -2),
-        rotation: Orientation::East,
-        tile_type: 4,
-    });
+    // commands.spawn().insert(Tile {
+    //     position: IVec3::new(-1, -1, -2),
+    //     rotation: Orientation::East,
+    //     tile_type: 4,
+    // });
 
-    commands.spawn().insert(Tile {
-        position: IVec3::new(-2, -1, -2),
-        rotation: Orientation::North,
-        tile_type: 2,
-    });
+    // commands.spawn().insert(Tile {
+    //     position: IVec3::new(-2, -1, -2),
+    //     rotation: Orientation::North,
+    //     tile_type: 2,
+    // });
 
     ev_update_ground.send_default();
 }
@@ -84,8 +111,8 @@ fn add_ground(
                 ..Default::default()
             })),
             material: materials.add(StandardMaterial {
-                base_color: Color::hex("1A7525").unwrap(),
-                // base_color_texture: Some(asset_server.load("textures/checker-grass.png")),
+                // base_color: Color::hex("1A7525").unwrap(),
+                base_color_texture: Some(asset_server.load("textures/checker-grass.png")),
                 ..default()
             }),
             ..default()
@@ -93,6 +120,31 @@ fn add_ground(
         .insert(Collider::cuboid(0.5, 0.5, 0.5))
         .insert(DynamicMesh::new())
         .insert(Ground)
+        .insert(tile_defs.clone());
+}
+fn add_walls(
+    asset_server: Res<AssetServer>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut commands: Commands,
+) {
+    let tile_defs: Handle<TileDefinitions> = asset_server.load("data/tiles.ron");
+
+    commands
+        .spawn_bundle(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Torus {
+                ..Default::default()
+            })),
+            material: materials.add(StandardMaterial {
+                // base_color: Color::hex("433022").unwrap(),
+                base_color_texture: Some(asset_server.load("textures/checker-wood.png")),
+                ..default()
+            }),
+            ..default()
+        })
+        .insert(Collider::cuboid(0.5, 0.01, 0.5))
+        .insert(DynamicMesh::new())
+        .insert(Wall)
         .insert(tile_defs.clone());
 }
 
@@ -133,6 +185,67 @@ fn update_ground(
                     }
                 }
             }
+        }
+    }
+}
+
+fn update_walls(
+    mut ev_update_ground: EventReader<UpdateGroundEvent>,
+    mut wall_query: Query<(&mut DynamicMesh, &Handle<TileDefinitions>), With<Wall>>,
+    tile_query: Query<&Tile>,
+    defs_asset: Res<Assets<TileDefinitions>>,
+) {
+    for _ in ev_update_ground.iter() {
+        for (mut dynamic_mesh, tile_defs) in wall_query.iter_mut() {
+            // Get the tile definitions.
+            let defs = match defs_asset.get(tile_defs) {
+                Some(defs) => &defs.0, // The defs asset exists.
+                // TODO: Figure out how to wait until the asset has loaded (defer the event maybe?)
+                None => continue, // The defs asset does not exist. Just continue.
+            };
+
+            let mut edges = Vec::new();
+            let mut edges_count = Vec::new();
+
+            // Go over each edge in each tile and add them to the list of edges.
+            for tile in tile_query.iter() {
+                if let Some(def) = defs.iter().find(|x| x.id == tile.tile_type) {
+                    for edge_index in def.edges.iter() {
+                        // Rotate each edge, while we're iterating add the position;
+                        let new_edge = Edge(
+                            TILE_VERTS[rotate_index(edge_index.0, &tile.rotation) as usize],
+                            TILE_VERTS[rotate_index(edge_index.1, &tile.rotation) as usize],
+                        );
+
+                        match edges.iter().position(|x| new_edge.eq(x)) {
+                            // If this edge already exists, increment our edge counter for this edge.
+                            Some(index) => {
+                                edges_count[index] += 1;
+                            }
+                            // Else add a new edge counter entry and the new edge.
+                            None => {
+                                // Add our edge.
+                                edges.push(new_edge);
+                                edges_count.push(1);
+                            }
+                        }
+                    }
+                }
+            }
+            let mut total_edges = 0;
+            for i in 0..edges.len() {
+                let edge = &edges[i];
+                if edges_count[i] == 1 {
+                    total_edges += 1;
+                    dynamic_mesh.insert_tri([edge.1, edge.0, edge.0 - Vec3::Y * TILE_BOUNDS.y]);
+                    dynamic_mesh.insert_tri([
+                        edge.0 - Vec3::Y * TILE_BOUNDS.y,
+                        edge.1 - Vec3::Y * TILE_BOUNDS.y,
+                        edge.1,
+                    ]);
+                }
+            }
+            println!("{:?} Edges total", total_edges);
         }
     }
 }
