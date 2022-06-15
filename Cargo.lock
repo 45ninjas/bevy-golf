@@ -200,6 +200,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "bevy",
+ "bevy_prototype_debug_lines",
  "bevy_rapier3d",
  "ron",
  "serde",
@@ -541,6 +542,15 @@ dependencies = [
  "bevy_window",
  "bitflags",
  "bytemuck",
+]
+
+[[package]]
+name = "bevy_prototype_debug_lines"
+version = "0.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a459a20dac7595bc3122693bc850236d1cfba7dafc56ad168b689bd13e912604"
+dependencies = [
+ "bevy",
 ]
 
 [[package]]

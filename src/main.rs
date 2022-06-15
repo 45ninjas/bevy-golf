@@ -1,6 +1,6 @@
-use bevy::{prelude::*, asset::AssetServerSettings};
+use bevy::{prelude::*, asset::AssetServerSettings, diagnostic::{LogDiagnosticsPlugin, FrameTimeDiagnosticsPlugin}};
 use bevy_rapier3d::prelude::*;
-
+use bevy_prototype_debug_lines::*;
 mod proc;
 mod ball;
 mod camera;
@@ -12,8 +12,11 @@ fn main() {
             ..default()
         })
         .add_plugins(DefaultPlugins)
+        .add_plugin(DebugLinesPlugin::default())
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-        .add_plugin(RapierDebugRenderPlugin::default())
+        // .add_plugin(RapierDebugRenderPlugin::default())
+        .add_plugin(LogDiagnosticsPlugin::default())
+        .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugin(proc::ProcPlugin)
         .add_plugin(ball::BallPlugin)
         .add_plugin(camera::CameraPlugin)
@@ -29,9 +32,8 @@ fn setup_scene(mut commands: Commands) {
     // Setup our lighting with slightly purple ambient and slightly orange directional light.
     commands.insert_resource(AmbientLight {
         color: Color::hex("CDB8E6").unwrap(),
-        brightness: 0.1,
+        brightness: 0.2,
     });
-
     commands.spawn_bundle(DirectionalLightBundle {
         directional_light: DirectionalLight {
             color: Color::hex("FFF7D8").unwrap(),
