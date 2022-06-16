@@ -37,11 +37,6 @@ pub fn rotate_index(index: u8, orientation: &Orientation) -> u8 {
         (rotations + index) % 4
     }
 }
-
-pub fn index_to_lower(index: u8) -> u8 {
-    index % 4
-}
-
 #[derive(Debug, Deserialize, TypeUuid, Component)]
 #[uuid = "aa5fc0fb-722d-4d8f-b0cd-9526f1a0e75e"]
 pub struct Tile {

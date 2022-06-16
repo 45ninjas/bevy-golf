@@ -53,7 +53,7 @@ fn add_ball(
 
 fn move_ball(
     mut balls_query: Query<(&mut ExternalForce, &Velocity, &Transform), With<Ball>>,
-    mut camera_query: Query<(&Transform, &OrthographicProjection), With<Camera3d>>,
+    camera_query: Query<(&Transform, &OrthographicProjection), With<Camera3d>>,
     mut lines: ResMut<DebugLines>,
     windows: Res<Windows>,
     buttons: Res<Input<MouseButton>>,
@@ -93,7 +93,6 @@ fn move_ball(
 
         if buttons.just_released(MouseButton::Left) {
             force.force = -dir;
-            println!("Bam!");
         }
     }
 }

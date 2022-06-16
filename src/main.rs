@@ -1,9 +1,9 @@
-use bevy::{prelude::*, asset::AssetServerSettings, diagnostic::{LogDiagnosticsPlugin, FrameTimeDiagnosticsPlugin}};
-use bevy_rapier3d::prelude::*;
+use bevy::{asset::AssetServerSettings, prelude::*};
 use bevy_prototype_debug_lines::*;
-mod proc;
+use bevy_rapier3d::{prelude::*, rapier::prelude::HalfSpace, plugin::systems::ColliderComponents};
 mod ball;
 mod camera;
+mod proc;
 
 fn main() {
     App::new()
@@ -15,8 +15,6 @@ fn main() {
         .add_plugin(DebugLinesPlugin::default())
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         // .add_plugin(RapierDebugRenderPlugin::default())
-        .add_plugin(LogDiagnosticsPlugin::default())
-        .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugin(proc::ProcPlugin)
         .add_plugin(ball::BallPlugin)
         .add_plugin(camera::CameraPlugin)
@@ -43,4 +41,6 @@ fn setup_scene(mut commands: Commands) {
         transform: Transform::from_xyz(0.2, 1.0, 0.2).looking_at(Vec3::ZERO, Vec3::Y),
         ..Default::default()
     });
+
+    commands.spawn().insert(Collider::halfspace(Vec3::Y).expect("Halfspace normal cannot be normalised."));
 }

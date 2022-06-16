@@ -1,4 +1,4 @@
-use bevy::{asset::AssetLoader, ecs::query, prelude::*};
+use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
 use tile::*;
@@ -156,6 +156,9 @@ fn update_ground(
                 None => continue, // The defs asset does not exist. Just continue.
             };
 
+            // Clear our dynamic mesh.
+            dynamic_mesh.clear();
+
             // TODO: Move this into it's own function.
             // Go over each tile in the world and add them to the dynamic_mesh.
             for tile in tile_query.iter() {
@@ -227,30 +230,35 @@ fn update_walls(
                     }
                 }
             }
+
+            // Clear our dynamic mesh.
+            dynamic_mesh.clear();
+
             let mut total_edges = 0;
             for i in 0..edges.len() {
                 let edge = &edges[i];
                 let a = edge.0;
                 let b = edge.1;
-                const WALL_SIZE: f32 = 0.075;
+                const WALL_SIZE: f32 = 0.08;
 
                 let up = Vec3::Y * WALL_SIZE;
+                let btm = Vec3::Y * -TILE_BOUNDS.y;
                 let inside = (a - b).normalize().cross(Vec3::Y) * WALL_SIZE;
 
                 // If there's one edge (no duplicated edges) then place our edge.
                 if edges_count[i] == 1 {
                     total_edges += 1;
                     // Outside wall
-                    dynamic_mesh.insert_tri([b + up, a + up, a - Vec3::Y]);
-                    dynamic_mesh.insert_tri([a - Vec3::Y, b - Vec3::Y, b + up]);
+                    dynamic_mesh.insert_tri([b + up, a + up, a + btm]);
+                    dynamic_mesh.insert_tri([a + btm, b + btm, b + up]);
 
                     // Top face
                     dynamic_mesh.insert_tri([b + up + inside, a + up, b + up]);
                     dynamic_mesh.insert_tri([b + up + inside, a + up + inside, a + up]);
 
                     // Inside face
-                    dynamic_mesh.insert_tri([b + up + inside, b + inside, a + inside]);
-                    dynamic_mesh.insert_tri([b + up + inside, a + inside, a + up + inside]);
+                    dynamic_mesh.insert_tri([b + up + inside, b + btm + inside, a + btm + inside]);
+                    dynamic_mesh.insert_tri([b + up + inside, a + btm + inside, a + up + inside]);
                 }
             }
             println!("{:?} Edges total", total_edges);
@@ -265,7 +273,7 @@ fn reload_tile_defs(
     for ev in ev_assets.iter() {
         match ev {
             AssetEvent::Created { handle: _ } => {}
-            AssetEvent::Modified { handle } => {
+            AssetEvent::Modified { handle: _ } => {
                 ev_update_ground.send_default();
             }
             AssetEvent::Removed { handle: _ } => {}
