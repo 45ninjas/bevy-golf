@@ -41,6 +41,4 @@ fn setup_scene(mut commands: Commands) {
         transform: Transform::from_xyz(0.2, 1.0, 0.2).looking_at(Vec3::ZERO, Vec3::Y),
         ..Default::default()
     });
-
-    commands.spawn().insert(Collider::halfspace(Vec3::Y).expect("Halfspace normal cannot be normalised."));
 }
