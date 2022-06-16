@@ -94,7 +94,7 @@ fn add_ground(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut commands: Commands,
 ) {
-    let tile_defs: Handle<TileDefinitions> = asset_server.load("data/tiles.ron");
+    let tile_defs: Handle<TileDefinitions> = asset_server.load("tiles.ron");
 
     commands
         .spawn_bundle(PbrBundle {
@@ -119,7 +119,7 @@ fn add_walls(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut commands: Commands,
 ) {
-    let tile_defs: Handle<TileDefinitions> = asset_server.load("data/tiles.ron");
+    let tile_defs: Handle<TileDefinitions> = asset_server.load("tiles.ron");
 
     commands
         .spawn_bundle(PbrBundle {
