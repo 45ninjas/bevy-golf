@@ -1,9 +1,7 @@
 use serde::Deserialize;
 
-use std::hash::{Hash, Hasher};
-
 use bevy::{
-    asset::{AssetLoader, LoadContext, LoadedAsset},
+    asset::{AssetLoader, LoadedAsset},
     math::const_vec3,
     prelude::*,
     reflect::TypeUuid,

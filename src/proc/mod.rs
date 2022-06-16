@@ -4,7 +4,7 @@ use bevy_rapier3d::prelude::*;
 use tile::*;
 
 mod dynamic_mesh;
-mod tile;
+pub mod tile;
 // use self::mesh_maker::MeshMaker;
 use self::dynamic_mesh::{DynamicMesh, DynamicMeshPlugin};
 

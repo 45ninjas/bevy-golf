@@ -2,7 +2,7 @@ use bevy::{prelude::*, render::camera::Camera3d};
 use bevy_prototype_debug_lines::*;
 use bevy_rapier3d::prelude::*;
 
-use crate::camera::{self, Ray};
+use crate::camera;
 
 const BALL_RADIUS: f32 = 0.035;
 
