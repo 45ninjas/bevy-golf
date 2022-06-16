@@ -1,38 +1,32 @@
 [
     (
         id: 1,
-        name: "flat",
-        triangles: [(4,6,5),(4,7,6)],
-        edges: [(4,7), (7,6), (6,5), (5,4)],
+        name: "Flat",
+        perimeter: [4,7,6,5]
     ),
     (
         id: 2,
-        name: "hole",
-        triangles: [(4,6,5),(4,7,6)],
-        edges: [(4,7), (7,6), (6,5), (5,4)]
+        name: "Hole",
+        perimeter: [4,7,6,5]
     ),
     (
         id: 3,
-        name: "ramp",
-        triangles: [(4,2,5), (4,3,2)],
-        edges: [(4,3), (3,2), (2,5), (5,4)]
+        name: "Ramp",
+        perimeter: [4,3,2,5]
     ),
     (
         id: 4,
-        name: "corner",
-        triangles: [(4,6,5)],
-        edges: [(4,6), (6,5), (5,4)]
+        name: "Corner",
+        perimeter: [4,6,5]
     ),
     (
         id: 5,
-        name: "ramp corner",
-        triangles: [(0,2,5), (0,3,2)],
-        edges: [(0,3), (3,2), (2,5), (5,0)]
+        name: "Ramp Corner",
+        perimeter: [0,3,2,5]
     ),
     (
         id: 6,
-        name: "ramp corner alt.",
-        triangles: [(4,6,5), (4,3,6)],
-        edges: [(4,3), (3,6), (6,5), (5,4)]
+        name: "Ramp Corner alt.",
+        perimeter: [4,3,6,5]
     )
 ]

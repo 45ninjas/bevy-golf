@@ -32,6 +32,11 @@ pub struct Wall;
 
 fn add_tiles(mut commands: Commands, mut ev_update_ground: EventWriter<UpdateGroundEvent>) {
     commands.spawn().insert(Tile {
+        position: IVec3::ZERO,
+        rotation: Orientation::North,
+        tile_type: 1
+    });
+    commands.spawn().insert(Tile {
         position: IVec3::new(2, 1, 0),
         rotation: Orientation::North,
         tile_type: 1,
@@ -40,11 +45,6 @@ fn add_tiles(mut commands: Commands, mut ev_update_ground: EventWriter<UpdateGro
         position: IVec3::new(1, 1, 0),
         rotation: Orientation::North,
         tile_type: 3,
-    });
-    commands.spawn().insert(Tile {
-        position: IVec3::new(0, 0, 0),
-        rotation: Orientation::North,
-        tile_type: 1,
     });
     commands.spawn().insert(Tile {
         position: IVec3::new(0, 0, -1),
@@ -164,7 +164,7 @@ fn update_ground(
             for tile in tile_query.iter() {
                 // If the tile definition for this tile exists, add it's triangles to the mesh.
                 if let Some(def) = defs.iter().find(|x| x.id == tile.tile_type) {
-                    for triangle in &def.triangles {
+                    for triangle in def.triangles().unwrap_or_default() {
                         let mut positions: [Vec3; 3] = [Vec3::ZERO; 3];
 
                         // Rotate each index. Also, while we're iterating add the position.
@@ -204,7 +204,7 @@ fn update_walls(
             // Go over each edge in each tile and add them to the list of edges.
             for tile in tile_query.iter() {
                 if let Some(def) = defs.iter().find(|x| x.id == tile.tile_type) {
-                    for edge_index in def.edges.iter() {
+                    for edge_index in def.edges().unwrap_or_default() {
                         // Rotate each edge, while we're iterating add the position;
                         let new_edge = Edge(
                             (TILE_VERTS[rotate_index(edge_index[0], &tile.rotation) as usize]
