@@ -3,7 +3,6 @@ use bevy::{
     prelude::*,
     render::camera::{Camera3d, WindowOrigin},
 };
-use bevy_rapier3d::prelude::*;
 
 pub struct CameraPlugin;
 
@@ -32,7 +31,7 @@ fn add_camera(mut commands: Commands) {
     camera.transform = Transform::from_translation(CAMERA_OFFSET).looking_at(Vec3::ZERO, Vec3::Y);
 
     commands.spawn_bundle(camera).insert(Smoother {
-        smoothness: 4.0,
+        smoothness: 6.0,
         enabled: true,
         last_value: CAMERA_OFFSET,
     });
@@ -45,24 +44,28 @@ fn camera_follow(
     )>,
     time: Res<Time>,
 ) {
-    // Get the middle of all the camera targets.
-    let mut middle_target = Vec3::ZERO;
+    // Our target position is the middle of all Camera targets ignoring the Y axis.
+    let mut target_pos = Vec3::ZERO;
     for target_transform in transforms.p1().iter() {
-        middle_target += target_transform.translation;
+        target_pos += target_transform.translation;
     }
-    middle_target /= transforms.p1().iter().count() as f32;
+    target_pos /= transforms.p1().iter().count() as f32;
+    target_pos.y = 0.0;
+    target_pos += CAMERA_OFFSET;
 
     for (mut transform, smoother) in transforms.p0().iter_mut() {
-        let target = middle_target + CAMERA_OFFSET;
-
         match smoother {
             Some(mut smoother) => {
-                transform.translation = smoother
-                    .last_value
-                    .lerp(target, smoother.smoothness * time.delta_seconds());
-                smoother.last_value = transform.translation;
+                if smoother.enabled {
+                    transform.translation = smoother
+                        .last_value
+                        .lerp(target_pos, smoother.smoothness * time.delta_seconds());
+                    smoother.last_value = transform.translation;
+                } else {
+                    transform.translation = target_pos;
+                }
             }
-            None => transform.translation = target,
+            None => transform.translation = target_pos,
         }
     }
 }
