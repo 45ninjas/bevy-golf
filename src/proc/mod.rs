@@ -2,8 +2,10 @@ use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
 use tile::*;
+use tile_definitions::*;
 
 mod dynamic_mesh;
+pub mod tile_definitions;
 pub mod tile;
 // use self::mesh_maker::MeshMaker;
 use self::dynamic_mesh::{DynamicMesh, DynamicMeshPlugin};
