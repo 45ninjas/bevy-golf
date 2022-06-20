@@ -2,7 +2,7 @@ use bevy::{audio::AudioSink, prelude::*, render::camera::Camera3d, transform};
 use bevy_prototype_debug_lines::*;
 use bevy_rapier3d::prelude::*;
 
-use crate::camera;
+use crate::camera::{self, cursor_ndc, Ray};
 
 const BALL_RADIUS: f32 = 0.035;
 const MAX_POWER: f32 = 0.25;
@@ -134,7 +134,7 @@ fn fire_ball(
 
 fn charge_ball(
     mut balls_query: Query<(&mut Ball, &Velocity, &Transform)>,
-    camera_query: Query<(&Transform, &OrthographicProjection), With<Camera3d>>,
+    camera_query: Query<(&GlobalTransform, &Camera), With<Camera3d>>,
     windows: Res<Windows>,
 ) {
     // Send a ray from screen into the world.
@@ -142,8 +142,9 @@ fn charge_ball(
     let window = windows
         .get_primary()
         .expect("No window to get cursor position from.");
-    let (cam_transform, projection) = camera_query.single();
-    let ray = camera::cursor_to_world_orthographic(cam_transform, projection, window);
+
+    let (cam_transform, cam) = camera_query.single();
+    let ray = Ray::from_screenspace(camera::cursor_ndc(window), cam, cam_transform);
     if ray.is_none() {
         return;
     }
@@ -156,8 +157,7 @@ fn charge_ball(
             continue;
         }
 
-        let dir = (ray.intersect_plane(Vec3::Y, trans.translation) - trans.translation)
-            / projection.scale;
+        let dir = (ray.intersect_plane(Vec3::Y, trans.translation) - trans.translation);
 
         let power = dir.length().powi(2).clamp(0.0, MAX_POWER) / MAX_POWER;
         ball.0 = -dir.normalize() * power;
